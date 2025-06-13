@@ -11,16 +11,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
- - name: Debug secrets
-  run: |
-    echo "DOCKER_USERNAME: $DOCKER_USERNAME"
-    echo "DOCKER_PASSWORD is set: [${DOCKER_PASSWORD:+yes}]"
-  env:
-    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-    DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Debug secrets
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "DOCKER_USERNAME: $DOCKER_USERNAME"
+          echo "DOCKER_PASSWORD is set: [${DOCKER_PASSWORD:+yes}]"
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-node-app .
 
       - name: Push to DockerHub
         run: docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted]
+    steps:
+      - name: Pull Docker image
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/my-node-app
+
+      - name: Run Docker container
+        run: docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-node-app
