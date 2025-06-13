@@ -19,5 +19,14 @@ jobs:
           echo "DOCKER_USERNAME: $DOCKER_USERNAME"
           echo "DOCKER_PASSWORD is set: [${DOCKER_PASSWORD:+yes}]"
 
+      - name: Confirm script reaches here
+        run: echo "Still running after debug!"
+
       - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-node-app .
+
+      - name: Push to DockerHub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app
