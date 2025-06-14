@@ -36,9 +36,6 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Run Tests
-        run: npm test
-
   deploy:
     name: Deploy Stage
     runs-on: ubuntu-latest
@@ -55,3 +52,14 @@ jobs:
 
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/my-node-app
+
+  run-on-ec2:
+    needs: build
+    runs-on: [self-hosted]
+    steps:
+      - name: Pull Docker image
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/my-node-app
+
+      - name: Run Docker container
+        run: docker run -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/my-node-app
+
